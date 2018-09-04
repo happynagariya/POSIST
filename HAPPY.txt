@@ -1,0 +1,290 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+void input_nodedata(void);
+class TimeStamp{
+
+    public:
+
+    string DDTT;
+
+    void put(string DDTT1)
+    {
+        DDTT=DDTT1;
+    }
+
+    string getDDTT()
+    {
+        return DDTT;
+    }
+
+};
+
+struct Data
+{
+ string name,code,check;
+ float value;
+};
+
+struct Node
+{
+  TimeStamp DDTT;
+  struct Data* data;
+  unsigned int nNumber;
+  unsigned int NodeId;
+  struct Node *ref;
+  vector<struct Node*> child;
+};
+
+map<int,struct Node*> all;
+
+static int number=0;
+string DDTT()
+{
+     time_t tt;
+    struct tm * ti;
+    time (&tt);
+    ti = localtime(&tt);
+
+    return asctime(ti);
+}
+
+unsigned int unique_no()
+{
+    return rand();
+}
+
+string encrypt(string value){
+    char key ='H';
+    string output = value;
+
+    for (int i = 0; i < value.size(); i++)
+        output[i] = value[i] ^ key;
+
+    return output;
+}
+
+void input_nodedata(int head,vector<struct Node*> NODES)
+{
+
+    int size = NODES.size();
+    string name,code,check="qwerty";
+    float value;
+
+    struct Node *Node1 = new Node();
+    struct Data *data1=new Data();
+    string date = DDTT();
+    TimeStamp time;
+    time.put(date);
+    Node1->DDTT=time;
+    cout<<"Enter UserName for particular node:\n";
+    cin>>name;
+    data1->name=encrypt(name);
+    cout<<"Enter password for every node:\n";
+    cin>>code;
+    data1->code=encrypt(code);
+
+    data1->check=encrypt(check);
+    cout<<"Enter value to be stored inside node:\n";
+    cin>>value;
+    data1->value=value;
+
+    Node1->data=data1;
+    Node1->nNumber=++number;
+    Node1->NodeId=unique_no();
+
+
+    if(head==-1)
+    {
+        Node1->ref=NULL;
+        NODES.push_back(Node1);
+    }
+    else
+    {
+        all[head]->child.push_back(Node1);
+        Node1->ref=all[head];
+
+    }
+
+    all[number]=Node1;
+    return;
+}
+
+bool verify(string code,string check)
+{
+        string code1=encrypt(code);
+        string check1=encrypt("qwerty");
+
+        map<int,struct Node*>::iterator it=all.begin();
+        int temp=0;
+
+        for(;it!=all.end(); it++)
+        {
+            if(it->second->data->code==code1 && it->second->data->check==check1)
+            {
+                temp=1;
+                cout<<encrypt(it->second->data->name)<<endl;
+
+                break;
+            }
+        }
+
+        if(temp==1)
+        return true;
+
+        return false;
+}
+
+int c=0;
+
+void longest(struct Node* root,int &max)
+{
+    	if(root==NULL)
+            return;
+
+ 		   c++;
+
+    		for(int i=0; i<root->child.size(); i++)
+            {
+                longest(root->child[i],max);
+            }
+
+    	if(c>max)
+            max=c;
+}
+
+void levels(struct Node* root,int c,int &max)
+{
+    	if(root==NULL)
+            return;
+
+    		for(int i=0; i<root->child.size(); i++)
+            {
+                levels(root->child[i],c+1,max);
+            }
+
+    	if(c>max)
+            max=c;
+}
+
+int main()
+{
+    vector<struct Node *> NODES;
+
+ 
+    while(true)
+    {
+    cout<<" select your option \n";
+    cout<<"1 :   Create Genesis Node\n";
+    cout<<"2 :   Create set of child node from genesis node\n";
+    cout<<"3 :   Create new Node to any set of child node\n";
+    cout<<"4 :   Encrypt the  Data\n";
+    cout<<"5 :   Enter the verification code for verifying owner node\n";
+    cout<<"6 :   Remove a node\n";
+    cout<<"7 :   Decrypt the data and change owner of particular node\n";
+    cout<<"8 :   Find longest chain of genesis node\n";
+    cout<<"9 :   Find Longest chain of any child or sub node\n";
+    cout<<"11 :  Press any Key to Exit";
+    cout<<"\n- - - - - -\n";
+        int no;
+        cout<<"\nEnter choice  from given option:\n";
+        cin>>no;
+
+        if(no==11)
+        break;
+
+        if(no==1)
+        {
+            input_nodedata(-1,NODES);
+        }
+
+       else if(no==2)
+        {
+            cout<<"Enter no. of sets\n";
+            int sets;
+            cin>>sets;
+
+            while(sets--)
+            {
+                input_nodedata(-1,NODES);
+            }
+        }
+
+       else if(no==3)
+        {
+            int nno;
+            cout<<"Enter Node number\n";
+            cin>>nno;
+
+            input_nodedata(nno,NODES);
+        }
+
+        else if(no==4)
+        {
+            string code,check;
+            cout<<"Enter code + Encryption Key"<<endl;
+
+            bool k=verify(code,check);
+        }
+
+         else if(no==5)
+        {
+            string code,check;
+            cout<<"Enter code and check key\n ";
+
+            bool k=verify(code,check);
+
+            if(k)
+            cout<<"Verified"<<endl;
+            else
+            cout<<"Not Verified"<<endl;
+
+            cout<<endl;
+        }
+
+        else if(no==6) 
+ {
+            int nno;
+            cout<<"enter Node number\n ";
+            cin>>nno;
+            all.erase(nno);
+ }	
+
+        else if(no==7)
+        {
+            int nno1,nno2;
+            cout<<"enter Node number of first Node and new owner\n ";
+            cin>>nno1>>nno2;
+
+            struct Node* first=all[nno1];
+            struct Node* newowner=all[nno2];
+
+            first->ref->child.erase(first->child.begin()+nno1);
+            newowner->child.push_back(first);
+            first->ref=newowner;
+        }
+
+        else if(no==8)
+        {
+            int max=0;
+            c=0;
+
+            for(int i=0; i<NODES.size(); i++)
+            	longest(NODES[i],max);
+
+            cout<<max<<endl;
+        }
+
+    	else if(no==9)
+        {
+            int max=0;
+            
+            for(int i=0; i<NODES.size(); i++)
+            	levels(NODES[i],0,max);
+            cout<<max<<endl;
+        }
+
+    }
+
+   return 0;
+}
